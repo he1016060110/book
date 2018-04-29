@@ -70,6 +70,10 @@ class YouluController extends Controller
                     $model->cat_id     = $one->id;
                     $model->save();
                 }
+
+                if (count($matches[1]) != 20 && $i != $max) {
+                    printf("get url error [%s] count[%d]\n", $page_url, count($matches[1]));
+                }
             }
 
             YouLuCatModel::updateAll(['status' => 2], 'id=:id', [
