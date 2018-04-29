@@ -79,8 +79,20 @@ class YouluController extends Controller
             YouLuCatModel::updateAll(['status' => 2], 'id=:id', [
                 'id' => $one->id,
             ]);
+
+            if ($one) {
+                printf("cat url[%s] is done \n", $one->url);
+            }
         }
-        printf("cat url[%s] is done \n", $one->url);
-        sleep(1);
+    }
+
+    public function actionTest()
+    {
+        $url = "http://www.youlu.net/classify/2-2622-166-6.html";
+        $curl = new Curl();
+        $result = $curl->get($url);
+        preg_match_all('/<div class="bName">\n<a href="(\/\d+)" target="_blank">([^<]+)<\/a>/m',
+            $result, $matches);
+        var_dump($matches);
     }
 }
