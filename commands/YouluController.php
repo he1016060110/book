@@ -43,6 +43,9 @@ class YouluController extends Controller
     {
         for(;;) {
             $one  = YouLuCatModel::find()->where("status=0")->one();
+            if (!$one) {
+                break;
+            }
             YouLuCatModel::updateAll(['status' => 1], 'id=:id', [
                 'id' => $one->id,
             ]);
