@@ -100,20 +100,24 @@ class YouluController extends Controller
     {
         $curl   = new Curl();
         for (; ;) {
-            $one = YouLuBookModel::find()->where("status=0")->select("url")->one();
+            $begin = microtime(true);
+            $one = YouLuBookModel::find()->where("status=0")->select("url")->limit("1")->one();
             if (!$one) {
                 return;
             }
             $book_url = $one->url;
+            $stage_0 = microtime(true);
+            printf("url [%s] time[%f]\n", $book_url, $stage_0 - $begin);
             YouLuBookModel::updateAll([
                 'status' => 1,
             ], 'url=:url', [
                 'url' => $book_url,
             ]);
-            $begin = microtime(true);
+            $stage_1 = microtime(true);
+            printf("url [%s] time[%f]\n", $book_url, $stage_1 - $begin);
             $result = $curl->get($book_url);
-            $end = microtime(true);
-            printf("url [%s] time[%f]\n", $book_url, $end - $begin);
+            $stage_2 = microtime(true);
+            printf("url [%s] time[%f]\n", $book_url, $stage_2 - $stage_1);
             preg_match("/<li class=\"t1\">[^<]+<a [^>]+>([^<]+)<\/a><\/li>/", $result, $matches);
             if (!empty($matches[1])) {
                 $author = $matches[1];
@@ -160,6 +164,8 @@ class YouluController extends Controller
             ], 'url=:url', [
                 'url' => $book_url,
             ]);
+            $stage_3 = microtime(true);
+            printf("url [%s] time[%f]\n\n", $book_url, $stage_3 - $stage_2);
         }
     }
 }
