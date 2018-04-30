@@ -98,6 +98,7 @@ class YouluController extends Controller
 
     public function actionDetail()
     {
+        $curl   = new Curl();
         for (; ;) {
             $one = YouLuBookModel::find()->where("status=0")->select("url")->one();
             if (!$one) {
@@ -109,7 +110,6 @@ class YouluController extends Controller
             ], 'url=:url', [
                 'url' => $book_url,
             ]);
-            $curl   = new Curl();
             $result = $curl->get($book_url);
             preg_match("/<li class=\"t1\">[^<]+<a [^>]+>([^<]+)<\/a><\/li>/", $result, $matches);
             if (!empty($matches[1])) {
@@ -143,6 +143,7 @@ class YouluController extends Controller
             if (!empty($matches[1])) {
                 $pages = $matches[1];
             }
+
             YouLuBookModel::updateAll([
                 'author'         => $author ?? "",
                 'publish_time'   => $publish_time ?? "",
