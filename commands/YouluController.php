@@ -136,6 +136,11 @@ class YouluController extends Controller
             ], 'url=:url', [
                 'url' => $book_url,
             ]);
+            var_dump(['author' => $author?? "",
+                      'publish_time' => $publish_time ?? "",
+                      'publisher' => $publisher ?? "",
+                      'isbn' =>$isbn ?? "",
+                      'img_url' => $img_url ?? "",]);
         }
 
     }
