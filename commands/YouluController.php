@@ -41,8 +41,8 @@ class YouluController extends Controller
 
     public function actionList()
     {
-        for(;;) {
-            $one  = YouLuCatModel::find()->where("status=0")->one();
+        for (; ;) {
+            $one = YouLuCatModel::find()->where("status=0")->one();
             if (!$one) {
                 break;
             }
@@ -88,8 +88,8 @@ class YouluController extends Controller
 
     public function actionTest()
     {
-        $url = "http://www.youlu.net/classify/2-2622-166-6.html";
-        $curl = new Curl();
+        $url    = "http://www.youlu.net/classify/2-2622-166-6.html";
+        $curl   = new Curl();
         $result = $curl->get($url);
         preg_match_all('/<div class="bName">\n<a href="(\/\d+)" target="_blank">([^<]+)<\/a>/m',
             $result, $matches);
@@ -98,13 +98,18 @@ class YouluController extends Controller
 
     public function actionDetail()
     {
-        for (;;) {
-            $one  = YouLuBookModel::find()->select("url")->one();
+        for (; ;) {
+            $one = YouLuBookModel::find()->where("status=0")->select("url")->one();
             if (!$one) {
                 return;
             }
             $book_url = $one->url;
-            $curl = new Curl();
+            YouLuBookModel::updateAll([
+                'status' => 1,
+            ], 'url=:url', [
+                'url' => $book_url,
+            ]);
+            $curl   = new Curl();
             $result = $curl->get($book_url);
             preg_match("/<li class=\"t1\">[^<]+<a [^>]+>([^<]+)<\/a><\/li>/", $result, $matches);
             if (!empty($matches[1])) {
@@ -112,36 +117,45 @@ class YouluController extends Controller
             }
             preg_match("/<li class=\"t2\">出版社：<a[^>]+>([^<]+)<\/a><\/li>/", $result, $matches);
             if (!empty($matches[1])) {
-                $isbn = $matches[1];
+                $publisher = $matches[1];
             }
-            $publisher = $matches[1];
             preg_match("/<li class=\"t3\">ISBN：<span>([^<]+)<\/span><\/li>/", $result, $matches);
             if (!empty($matches[1])) {
                 $isbn = $matches[1];
             }
             preg_match("/<li class=\"t1\">出版日期：<span>([^<]+)<\/span><\/li>/", $result, $matches);
             if (!empty($matches[1])) {
-                $publish_time = date("Y-m-d H:i:s", strtotime($matches[1]));
+                preg_match("/(\d+)年(\d+)月(\d+)日/", $matches[1], $matches1);
+                if (!empty($matches1[1])) {
+                    $publish_time = $matches1[1] . "-" . $matches1[2] . "-" . $matches1[3];
+                }
             }
             preg_match("/<a href=\"\/picBook\/\?bookId=\d+\"[^>]+><img src=\"([^\"]+)\"[^>]+><\/a>/", $result, $matches);
             if (!empty($matches[1])) {
                 $img_url = $matches[1];
             }
+            preg_match("/定价：(.*), 旧书普通用户价：(.*)元, 旧书VIP用户价：/", $result, $matches);
+            if (!empty($matches[1])) {
+                $price          = $matches[1];
+                $discount_price = $matches[2];
+            }
+            preg_match("/<li class=\"t2\">页数：<span>(\d+)<\/span><\/li>/", $result, $matches);
+            if (!empty($matches[1])) {
+                $pages = $matches[1];
+            }
             YouLuBookModel::updateAll([
-                'author' => $author?? "",
-                'publish_time' => $publish_time ?? "",
-                'publisher' => $publisher ?? "",
-                'isbn' =>$isbn ?? "",
-                'img_url' => $img_url ?? "",
+                'author'         => $author ?? "",
+                'publish_time'   => $publish_time ?? "",
+                'publisher'      => $publisher ?? "",
+                'isbn'           => $isbn ?? "",
+                'img_url'        => $img_url ?? "",
+                'status'         => 2,
+                'price_discount' => $discount_price ?? "",
+                'price'          => $price ?? "",
+                'pages'          => $pages ?? "",
             ], 'url=:url', [
                 'url' => $book_url,
             ]);
-            var_dump(['author' => $author?? "",
-                      'publish_time' => $publish_time ?? "",
-                      'publisher' => $publisher ?? "",
-                      'isbn' =>$isbn ?? "",
-                      'img_url' => $img_url ?? "",]);
         }
-
     }
 }
