@@ -95,4 +95,48 @@ class YouluController extends Controller
             $result, $matches);
         var_dump($matches);
     }
+
+    public function actionDetail()
+    {
+        for (;;) {
+            $one  = YouLuBookModel::find()->select("url")->one();
+            if (!$one) {
+                return;
+            }
+            $book_url = $one->url;
+            $curl = new Curl();
+            $result = $curl->get($book_url);
+            preg_match("/<li class=\"t1\">[^<]+<a [^>]+>([^<]+)<\/a><\/li>/", $result, $matches);
+            if (!empty($matches[1])) {
+                $author = $matches[1];
+            }
+            preg_match("/<li class=\"t2\">出版社：<a[^>]+>([^<]+)<\/a><\/li>/", $result, $matches);
+            if (!empty($matches[1])) {
+                $isbn = $matches[1];
+            }
+            $publisher = $matches[1];
+            preg_match("/<li class=\"t3\">ISBN：<span>([^<]+)<\/span><\/li>/", $result, $matches);
+            if (!empty($matches[1])) {
+                $isbn = $matches[1];
+            }
+            preg_match("/<li class=\"t1\">出版日期：<span>([^<]+)<\/span><\/li>/", $result, $matches);
+            if (!empty($matches[1])) {
+                $publish_time = date("Y-m-d H:i:s", strtotime($matches[1]));
+            }
+            preg_match("/<a href=\"\/picBook\/\?bookId=\d+\"[^>]+><img src=\"([^\"]+)\"[^>]+><\/a>/", $result, $matches);
+            if (!empty($matches[1])) {
+                $img_url = $matches[1];
+            }
+            YouLuBookModel::updateAll([
+                'author' => $author?? "",
+                'publish_time' => $publish_time ?? "",
+                'publisher' => $publisher ?? "",
+                'isbn' =>$isbn ?? "",
+                'img_url' => $img_url ?? "",
+            ], 'url=:url', [
+                'url' => $book_url,
+            ]);
+        }
+
+    }
 }
