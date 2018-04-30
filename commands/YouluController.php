@@ -110,7 +110,10 @@ class YouluController extends Controller
             ], 'url=:url', [
                 'url' => $book_url,
             ]);
+            $begin = microtime(true);
             $result = $curl->get($book_url);
+            $end = microtime(true);
+            printf("url [%s] time[%f]\n", $book_url, $end - $begin);
             preg_match("/<li class=\"t1\">[^<]+<a [^>]+>([^<]+)<\/a><\/li>/", $result, $matches);
             if (!empty($matches[1])) {
                 $author = $matches[1];
