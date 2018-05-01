@@ -10,7 +10,8 @@ use Yii;
  * @property int $id
  * @property int $book_id
  * @property int $status
- * @property int $stock_num
+ * @property int $stock_old_num
+ * @property int $stock_new_num
  */
 class YouLuSaleModel extends \yii\db\ActiveRecord
 {

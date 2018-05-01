@@ -184,9 +184,11 @@ class YouluController extends Controller
             $sql = "CREATE TABLE `{$table_name}` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `book_id` int(11) NOT NULL,
-  `stock_num` int(11) NOT NULL DEFAULT '0',
+  `stock_old_num` int(11) NOT NULL DEFAULT '0',
+  `stock_new_num` int(11) NOT NULL DEFAULT '0',
   `status` int(11) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `book_id` (`book_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8";
             Yii::$app->db->createCommand($sql)->execute();
         }catch (Throwable $e) {}
@@ -216,4 +218,43 @@ class YouluController extends Controller
         }
     }
 
+    public function actionUpdateNum()
+    {
+        $curl = new Curl();
+        $count = 0;
+        for (;;) {
+            $one = YouLuSaleModel::find()->where("status=0")->limit(1)->one();
+            if (!$one) {
+                break;
+            }
+
+            $book = YouLuBookModel::find()->select("url")->where("id=:id", [
+                'id' => $one->book_id,
+            ])->one();
+            YouLuSaleModel::updateAll([
+                'status' => 1,
+            ], 'book_id=:book_id', [
+                'book_id' => $one->book_id,
+            ]);
+            preg_match("/http:\/\/www.youlu.net\/(\d+)/", $book->url, $matches);
+            if (!empty($matches[1])) {
+                $url = "http://www.youlu.net/info3/bookBuy.aspx?bookId={$matches[1]}&category=&_=1525155831591";
+                $result = $curl->get($url);
+                $data = json_decode($result, true);
+                $arr = json_decode($data['info'], true);
+                if (!empty($arr['main'])) {
+                    YouLuSaleModel::updateAll([
+                        'status' => 2,
+                        'stock_old_num' => $arr['main']['UsedBookStoreCounts'],
+                        'stock_new_num' => $arr['main']['NewBookStoreCounts'],
+                    ], 'book_id=:book_id', [
+                        'book_id' => $one->book_id,
+                    ]);
+                    printf("url[%s] update succ\n", $book->url);
+                }
+            }
+            $count++;
+            printf("url[%s] count[%d]\n", $book->url, $count);
+        }
+    }
 }
