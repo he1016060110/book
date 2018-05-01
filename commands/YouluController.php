@@ -254,6 +254,11 @@ class YouluController extends Controller
                 }
             }
             $count++;
+            YouLuSaleModel::updateAll([
+                'status' => 2,
+            ], 'book_id=:book_id', [
+                'book_id' => $one->book_id,
+            ]);
             printf("url[%s] count[%d]\n", $book->url, $count);
         }
     }
