@@ -11,8 +11,11 @@ namespace app\commands;
 
 use app\models\YouLuBookModel;
 use app\models\YouLuCatModel;
+use app\models\YouLuSaleModel;
 use linslin\yii2\curl\Curl;
+use Throwable;
 use yii\console\Controller;
+use Yii;
 
 class YouluController extends Controller
 {
@@ -168,4 +171,27 @@ class YouluController extends Controller
             printf("url [%s] time[%f]\n\n", $book_url, $stage_3 - $stage_2);
         }
     }
+
+    public function checkBookSaleExist($table_name)
+    {
+        try {
+            $sql = "CREATE TABLE `{$table_name}` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `book_id` int(11) NOT NULL,
+  `stock_num` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8";
+            Yii::$app->db->createCommand($sql)->execute();
+        }catch (Throwable $e) {}
+    }
+
+    public function actionBookSale($date = null)
+    {
+        $date = $date ?: date("Ymd");
+        $table_name = "youlu_sale_{$date}";
+        YouLuSaleModel::setTableNameByDate($date);
+        $this->checkBookSaleExist($table_name);
+
+    }
+
 }
