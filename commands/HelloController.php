@@ -27,7 +27,8 @@ class HelloController extends Controller
      */
     public function actionIndex($message = 'hello world')
     {
-        echo $message . "\n";
+        echo \Yii::$app->redis->get("a");
+        \Yii::$app->redis->set("a", 1);
 
         return ExitCode::OK;
     }
